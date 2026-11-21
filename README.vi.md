@@ -1,11 +1,14 @@
 # Binary Living Matrix
 
-Showcase tương tác từ các chữ số nhị phân. WOMAN thở nhẹ, với dáng nghiêng kéo xuống đùi trên. Bấm bento để chuyển sang OCEAN, focus prompt để hiện BRAIN, hoặc chạm và kéo ở vùng chữ số lộ ra để tạo vết lõm đàn hồi. Vào Open Lab để chọn hình, dừng chuyển động hoặc reset.
+Showcase đồ họa tương tác. Cùng một trường chữ số nhị phân tạo thành dáng WOMAN đang thở, sóng OCEAN và các xung điện của BRAIN.
 
-Dùng Node.js 22.12 trở lên và npm. Chạy `npm ci` rồi `npm run dev`. Chạy `npm run build` để xuất bản build và `npm run preview` để xem bản build.
+[Mở showcase](https://batman-begun.github.io/binary-living-matrix/) · [Xem video demo](https://batman-begun.github.io/binary-living-matrix/demo/matrix-demo.mp4) · [English](README.md)
 
-React bố trí trang. Các module TypeScript trong `src/matrix/` tạo glyph, lấy mẫu hình thể và vẽ lên Canvas 2D. Tất cả glyph dùng chung font monospace cỡ 8 CSS px.
+- Chạm hoặc kéo trên phần canvas lộ ra để tạo sóng lan.
+- Bấm bento để chuyển sang OCEAN. Sau chín giây không tương tác thêm, matrix tự về WOMAN.
+- Vào ô nhập để hiện BRAIN. Gõ chữ tạo xung rồi rời ô nhập để quay lại WOMAN. Nội dung được xử lý trên thiết bị.
+- Mở Lab để giữ một hình, chọn Auto/Eco/High, chỉnh chuyển động và xem số đo khi chạy.
 
-Còn chờ UAT chuyển động trên Android thật, đo hiệu năng và hoàn thiện diagnostics trong Lab. Chạy `npm test` để kiểm tra regression cho phần vẽ và chuyển động.
+Dùng Node.js 22.12 trở lên. Chạy `npm ci` rồi `npm run dev`. Dùng `npm run lint`, `npm test` và `npm run build` để kiểm tra. Cài Chromium và Firefox bằng `npx playwright install chromium firefox` rồi chạy `npm run test:browser`. Video có thể quay lại bằng `npm run record` sau khi build, với Chromium và FFmpeg đã cài.
 
-Mã nguồn dùng [Mozilla Public License 2.0](LICENSE).
+[Kiến trúc](docs/architecture.md) · [Quy tắc hình ảnh](docs/visual-rules.md) · [Hiệu năng và UAT](docs/performance.md) · [Giấy phép MPL 2.0](LICENSE)

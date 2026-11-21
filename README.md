@@ -1,20 +1,30 @@
 # Binary Living Matrix
 
-An interactive design lab made from binary digits. The WOMAN profile extends to the upper thighs. Select a bento card for OCEAN, focus the prompt for BRAIN, and press or drag on exposed digits for elastic touch. Open Lab to select a shape, pause motion, or reset.
+An interactive graphics showcase. A shared field of binary glyphs breathes as WOMAN, flows as OCEAN and pulses as BRAIN.
 
-## Run
+[Open the live showcase](https://batman-begun.github.io/binary-living-matrix/) · [Watch the demo](https://batman-begun.github.io/binary-living-matrix/demo/matrix-demo.mp4) · [Tiếng Việt](README.vi.md)
 
-With Node.js 22.12 or newer and npm:
+## Try it
+
+- Wait for WOMAN to breathe. Press or drag in the uncovered matrix to make it ripple.
+- Activate any bento card to morph into OCEAN. The showcase returns to WOMAN after nine seconds without a new interaction.
+- Focus the prompt for BRAIN and type to trigger neural pulses. Leave the prompt to return to WOMAN. The prompt runs locally.
+- Open Lab to hold a shape, select Auto/Eco/High, set motion intensity and inspect rendering diagnostics.
+
+## Run from source
+
+Node.js 22.12 or later and npm are required. The production site is static.
 
 ```sh
 npm ci
 npm run dev
+npm run lint
+npm test
 npm run build
-npm run preview
+npx playwright install chromium firefox
+npm run test:browser
 ```
 
-The React shell measures the artwork bounds. The TypeScript modules in `src/matrix/` generate glyphs, sample the portrait and draw to Canvas 2D. The canvas uses a single 8 CSS px monospace font and deterministic glyph positions for each grid size.
+Run `npm run record` after the build with Chromium installed and FFmpeg on PATH to capture the demo. GitHub Actions runs checks, records the verified build, publishes GitHub Pages and creates the versioned release.
 
-Physical Android motion testing, profiling and the full Lab diagnostics are pending. Run the motion and rendering regression tests with `npm test`.
-
-Source code is available under the [Mozilla Public License 2.0](LICENSE).
+[Architecture](docs/architecture.md) · [Visual rules](docs/visual-rules.md) · [Performance and device UAT](docs/performance.md) · [MPL 2.0 license](LICENSE)

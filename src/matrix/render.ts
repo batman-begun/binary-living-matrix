@@ -7,6 +7,7 @@ import { rippleAt, touchStrength, type Impression, type Weights } from './motion
 
 export const BACKGROUND = '#F7F7F4'
 export const GLYPH_FONT = '400 8px ui-monospace, monospace'
+export const DEFAULT_MOTION = { breath: 1, wave: 1, touch: 1 }
 const TAU = 2 * Math.PI
 const clamp = (n: number) => Math.max(0, Math.min(1, n))
 
@@ -22,6 +23,7 @@ export function makeScene(glyphs: readonly Glyph[], width: number, height: numbe
     const lobe = ((Math.abs(u) - 0.34) / 0.68) ** 2 + ((v + 0.08 * Math.cos(u * 3)) / 0.64) ** 2
     const folds = (1 + Math.cos(u * 18 + v * 9 + 2.4 * Math.sin(v * 8))) / 2
     return {
+      id: glyph.id,
       bit: glyph.bit === 0 ? '0' : '1',
       x, y, nx: glyph.x, ny: glyph.y, v,
       ambient: 0.13 + glyph.tone * 0.12,
@@ -49,6 +51,7 @@ export function bindCanvas(canvas: HTMLCanvasElement, width: number, height: num
 export function drawScene(
   context: CanvasRenderingContext2D, scene: ReturnType<typeof makeScene>, width: number, height: number,
   weights: Weights, now: number, touches: readonly Impression[] = [], pulseAt = -Infinity, still = false,
+  motion = DEFAULT_MOTION,
 ) {
   const [woman, ocean, brain] = weights
   const time = still ? 0 : now / 1000
@@ -65,7 +68,7 @@ export function drawScene(
     let green = 0
     let ink = 0
     if (woman > 0) {
-      const breath = still ? 0 : Math.sin(time * TAU / 6.1 + glyph.ny * 2.4 + glyph.nx * 0.7)
+      const breath = still ? 0 : Math.sin(time * TAU / 6.1 + glyph.ny * 2.4 + glyph.nx * 0.7) * motion.breath
       const influence = Math.min(1, glyph.woman.ink * 1.8)
       x += (glyph.nx - 0.5) * breath * influence * woman * 17
       y += breath * influence * woman * -2.8
@@ -80,8 +83,8 @@ export function drawScene(
       const cross = Math.sin(glyph.nx * 14 - glyph.ny * 14 + time * 1.29)
       const band = Math.cos(glyph.nx * 2.5 + Math.sqrt(depth) * 32 + sweep * 1.3 + cross * 0.45 - time * 1.15)
       const presence = Math.min(1, depth * 7) * (1 - clamp((glyph.ny - 0.9) * 8) * 0.6)
-      const tide = (sweep * 0.72 + cross * 0.28) * (3 + 12 * depth)
-      x += cross * depth * 5 * ocean
+      const tide = (sweep * 0.72 + cross * 0.28) * (3 + 12 * depth) * motion.wave
+      x += cross * depth * 5 * ocean * motion.wave
       y += tide * ocean * presence
       const tone = presence * ((band + 1) / 2) ** 2.25 * (0.3 + 0.42 * depth) * ocean
       ink += tone
@@ -105,13 +108,13 @@ export function drawScene(
       const dy = y - force.y
       const distance = Math.hypot(dx, dy)
       if (distance < radius) {
-        const falloff = (1 - (distance / radius) ** 2) ** 2 * force.strength
+        const falloff = (1 - (distance / radius) ** 2) ** 2 * force.strength * motion.touch
         x += dx * falloff * 0.9
         y += (dy * 0.55 + radius * 0.24) * falloff
       }
 
       const age = now - (force.released ?? force.started)
-      const ripple = rippleAt(distance, age, waveLimit) * (force.released === undefined ? 1 : 0.75)
+      const ripple = rippleAt(distance, age, waveLimit) * (force.released === undefined ? 1 : 0.75) * motion.touch
       if (ripple === 0) continue
       x += dx / Math.max(distance, 1) * ripple * 16
       y += dy / Math.max(distance, 1) * ripple * 16

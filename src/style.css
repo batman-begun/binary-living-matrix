@@ -78,7 +78,6 @@ button[aria-pressed="true"] { color: #8c263e; border-color: #8c263e; }
 .prompt button { border: 0; background: transparent; min-width: 44px; }
 .lab { margin-top: 0.45rem; color: #4f443e; font-size: 0.82rem; }
 summary { cursor: pointer; width: fit-content; padding: 0.45rem 0; min-height: 34px; }
-.lab-controls { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0.4rem; }
 .lab-controls button { padding: 0 0.55rem; text-transform: capitalize; }
 .response { margin: 0.5rem 0; }
 :focus-visible { outline: 2px solid #8c263e; outline-offset: 2px; }
@@ -103,3 +102,16 @@ summary { cursor: pointer; width: fit-content; padding: 0.45rem 0; min-height: 3
 .showcase[data-keyboard] .intro { visibility: hidden; }
 .showcase[data-keyboard] .masthead { visibility: hidden; }
 .prompt input { font-size: max(16px, 1em); }
+
+.masthead a { color: inherit; pointer-events: auto; }
+.lab-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; padding: 0.65rem; }
+.lab-shapes, .lab-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.lab-controls label { min-width: 0; display: grid; gap: 0.2rem; }
+.lab-controls select { min-height: 44px; border: 1px solid #998c81; border-radius: 0.35rem; color: inherit; background: #f7f7f4; font: inherit; }
+.lab-controls input[type="range"] { width: 100%; min-height: 30px; accent-color: #8c263e; }
+.lab-actions button { text-transform: none; }
+.diagnostics { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem 0.6rem; margin: 0; }
+.diagnostics div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem; }
+.diagnostics dd { margin: 0; font-variant-numeric: tabular-nums; }
+.lab-feedback { grid-column: 1 / -1; }
+.renderer-fallback { position: absolute; top: 35%; left: 20%; right: 20%; text-align: center; }

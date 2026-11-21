@@ -1,5 +1,9 @@
-name: CI
-on: [push, pull_request]
+name: Verify and publish
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,5 +18,76 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm test
       - run: npm run build
+      - run: npx playwright install --with-deps chromium firefox
+      - run: npm run test:browser
+      - name: Capture demo and browser performance baseline
+        if: github.ref == 'refs/heads/main'
+        run: |
+          if ! command -v ffmpeg; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          npm run record
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: dist
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: demo-media
+          path: dist/demo
+          if-no-files-found: error
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish verified build
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  release:
+    if: github.ref == 'refs/heads/main'
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: showcase-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: demo-media
+          path: demo
+      - name: Publish version and demo assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            exit 0
+          fi
+          curl --retry 8 --retry-all-errors --retry-delay 3 -fsS "${PAGE_URL%/}/"
+          curl --retry 8 --retry-all-errors --retry-delay 3 -fsSI "${PAGE_URL%/}/demo/matrix-demo.mp4"
+          gh release create "$tag" --target "$GITHUB_SHA" --title "Binary Living Matrix $tag" \
+            --notes-file docs/release-notes.md demo/matrix-demo.mp4 demo/woman.png demo/ocean.png demo/brain.png demo/benchmark.json

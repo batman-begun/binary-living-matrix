@@ -3,9 +3,15 @@
 import { useLayoutEffect, useRef, useState, type PointerEvent } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MatrixEngine } from './matrix/engine'
-import { SHAPES, type Shape } from './matrix/motion'
+import { type Shape } from './matrix/motion'
 import { frameAbovePrompt } from './matrix/viewport'
+import { Lab, type MotionMode } from './Lab'
+import { DEFAULT_MOTION } from './matrix/render'
+import type { Diagnostics, QualityMode } from './matrix/quality'
 import './style.css'
+
+const MOTION_PREFERENCE = '(prefers-reduced-motion: reduce)'
+const systemMotion = (): MotionMode => matchMedia(MOTION_PREFERENCE).matches ? 'still' : 'ambient'
 
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -18,13 +24,16 @@ function App() {
   const autoOcean = useRef(false)
   const returnTimer = useRef<number>(0)
   const [shape, setShape] = useState<Shape>('woman')
-  const [still, setStill] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const [motion, setMotion] = useState(systemMotion)
+  const [quality, setQuality] = useState<QualityMode>('auto')
+  const [settings, setSettings] = useState(DEFAULT_MOTION)
+  const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null)
   const [submitted, setSubmitted] = useState(false)
 
   useLayoutEffect(() => {
     const surface = canvas.current!
     const anchor = portrait.current!
-    const matrix = new MatrixEngine(surface)
+    const matrix = new MatrixEngine(surface, setDiagnostics)
     engine.current = matrix
 
     const viewport = window.visualViewport
@@ -63,8 +72,8 @@ function App() {
       else matrix.resume()
     }
 
-    const media = matchMedia('(prefers-reduced-motion: reduce)')
-    const motionPreference = () => setStill(media.matches)
+    const media = matchMedia(MOTION_PREFERENCE)
+    const motionPreference = () => setMotion(media.matches ? 'still' : 'ambient')
     media.addEventListener('change', motionPreference)
     resize()
     const observer = new ResizeObserver(resize)
@@ -93,7 +102,12 @@ function App() {
     }
   }, [])
 
-  useLayoutEffect(() => { engine.current?.setStill(still) }, [still])
+  useLayoutEffect(() => { engine.current?.setStill(motion === 'still') }, [motion])
+  useLayoutEffect(() => { engine.current?.setQuality(quality) }, [quality])
+  useLayoutEffect(() => {
+    const gain = motion === 'alive' ? 1.25 : 1
+    engine.current?.setMotion({ breath: settings.breath * gain, wave: settings.wave * gain, touch: settings.touch * gain })
+  }, [motion, settings])
 
   function choose(next: Shape, temporary = false) {
     clearTimeout(returnTimer.current)
@@ -134,10 +148,11 @@ function App() {
         onLostPointerCapture={event => engine.current?.release(event.pointerId)} />
       <header className="masthead">
         <span>BINARY / ALIVE</span>
-        <span>Interactive Design Lab</span>
+        <a href="https://github.com/batman-begun/binary-living-matrix">Source on GitHub</a>
       </header>
       <div className="portrait" ref={portrait} role="img"
         aria-label={{ woman: 'Abstract woman drawn in binary', ocean: 'Layers of ocean waves drawn in binary', brain: 'A floating brain drawn in binary' }[shape]} />
+      {diagnostics?.renderer === 'Unavailable' && <p className="renderer-fallback" role="status">Canvas is unavailable. This browser can still use the prompt and Lab controls.</p>}
       <section className="intro" aria-labelledby="title">
         <h1 id="title">Binary Living Matrix</h1>
         <p>A living interface made entirely of zeros and ones.</p>
@@ -156,14 +171,17 @@ function App() {
           <button type="submit" aria-label="Submit visual prompt">↗</button>
         </form>
         {submitted && <p className="response" role="status">This is an interactive visual demo — no message was sent.</p>}
-        <details className="lab">
-          <summary>Open Lab</summary>
-          <div className="lab-controls">
-            {SHAPES.map(mode => <button key={mode} aria-pressed={shape === mode} onClick={() => choose(mode)}>{mode}</button>)}
-            <button aria-pressed={still} onClick={() => setStill(!still)}>Still</button>
-            <button onClick={() => { choose('woman'); engine.current?.reset(); setStill(matchMedia('(prefers-reduced-motion: reduce)').matches) }}>Reset</button>
-          </div>
-        </details>
+        <Lab shape={shape} motion={motion} diagnostics={diagnostics} quality={quality} settings={settings}
+          onShape={choose} onMotion={setMotion} onQuality={setQuality} onSettings={setSettings}
+          onReset={() => {
+            choose('woman')
+            engine.current?.reset()
+            setSettings(DEFAULT_MOTION)
+            setQuality('auto')
+            setMotion(systemMotion())
+            if (input.current) input.current.value = ''
+            setSubmitted(false)
+          }} />
       </section>
     </main>
   )
