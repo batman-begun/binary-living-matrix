@@ -31,13 +31,23 @@ export class Morph {
 }
 
 export type Impression = { x: number; y: number; started: number; released?: number }
-export const RELEASE_MS = 1150
+export const RELEASE_MS = 1350
 
 export function touchStrength(touch: Impression, now: number): number {
   const end = touch.released ?? now
-  const pressed = 1 - Math.exp(-Math.max(0, end - touch.started) / 55)
+  const pressed = 0.42 + 0.58 * (1 - Math.exp(-Math.max(0, end - touch.started) / 55))
   if (touch.released === undefined) return pressed
   const age = now - touch.released
   if (age >= RELEASE_MS) return 0
   return pressed * Math.exp(-age / 260) * Math.cos(age / 72) * (1 - age / RELEASE_MS)
+}
+
+export function rippleAt(distance: number, age: number, limit: number) {
+  if (age <= 0 || age >= RELEASE_MS || distance >= limit) return 0
+  const front = age * 0.36
+  const offset = distance - front
+  const width = 18 + age * 0.018
+  if (Math.abs(offset) > width * 2.5) return 0
+  const envelope = Math.exp(-((offset / width) ** 2)) * (1 - age / RELEASE_MS)
+  return envelope * (1 - (distance / limit) ** 2) * Math.cos(offset / 15) * Math.min(1, age / 65)
 }

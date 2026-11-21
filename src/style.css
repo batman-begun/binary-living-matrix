@@ -98,3 +98,8 @@ summary { cursor: pointer; width: fit-content; padding: 0.45rem 0; min-height: 3
   .controls { align-self: start; width: 48%; }
   h1 { font-size: clamp(2rem, 6vw, 4rem); }
 }
+
+/* The browser keeps the input visible. Give the brain the space above it. */
+.showcase[data-keyboard] .intro { visibility: hidden; }
+.showcase[data-keyboard] .masthead { visibility: hidden; }
+.prompt input { font-size: max(16px, 1em); }

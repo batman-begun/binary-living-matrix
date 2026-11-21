@@ -3,6 +3,7 @@
 import { createGlyphField } from './glyphField.ts'
 import { Morph, RELEASE_MS, type Shape, type Impression } from './motion.ts'
 import { bindCanvas, drawScene, makeScene } from './render.ts'
+import type { BrainFrame } from './viewport.ts'
 import type { Portrait } from './woman.ts'
 
 export class MatrixEngine {
@@ -21,7 +22,7 @@ export class MatrixEngine {
 
   constructor(private canvas: HTMLCanvasElement) {}
 
-  resize(width: number, height: number, portrait: Portrait, ratio: number) {
+  resize(width: number, height: number, portrait: Portrait, ratio: number, brainFrame?: BrainFrame) {
     const columns = Math.max(1, Math.round(width / 9))
     const rows = Math.max(1, Math.round(height / 11))
     const grid = `${columns}x${rows}`
@@ -29,10 +30,14 @@ export class MatrixEngine {
       this.glyphs = createGlyphField(columns, rows, 1973)
       this.grid = grid
     }
+    const backingRatio = Math.min(ratio, 2)
+    if (!this.context || width !== this.width || height !== this.height ||
+        this.canvas.width !== Math.ceil(width * backingRatio) || this.canvas.height !== Math.ceil(height * backingRatio)) {
+      this.context = bindCanvas(this.canvas, width, height, ratio)
+    }
     this.width = width
     this.height = height
-    this.context = bindCanvas(this.canvas, width, height, ratio)
-    this.scene = makeScene(this.glyphs, width, height, portrait)
+    this.scene = makeScene(this.glyphs, width, height, portrait, brainFrame)
     this.paint(performance.now())
   }
 

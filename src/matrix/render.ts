@@ -2,17 +2,18 @@
 
 import type { Glyph } from './glyphField'
 import { sampleWoman, type Portrait } from './woman.ts'
-import { touchStrength, type Impression, type Weights } from './motion.ts'
+import type { BrainFrame } from './viewport.ts'
+import { rippleAt, touchStrength, type Impression, type Weights } from './motion.ts'
 
 export const BACKGROUND = '#F7F7F4'
 export const GLYPH_FONT = '400 8px ui-monospace, monospace'
 const TAU = 2 * Math.PI
 const clamp = (n: number) => Math.max(0, Math.min(1, n))
 
-export function makeScene(glyphs: readonly Glyph[], width: number, height: number, portrait: Portrait) {
-  const scale = Math.min(width * 0.37, height * 0.25)
-  const cx = portrait.x + 120 * portrait.size
-  const cy = portrait.y + 185 * portrait.size
+export function makeScene(glyphs: readonly Glyph[], width: number, height: number, portrait: Portrait, brainFrame?: BrainFrame) {
+  const scale = brainFrame?.scale ?? Math.min(width * 0.37, height * 0.25)
+  const cx = brainFrame?.x ?? portrait.x + 120 * portrait.size
+  const cy = brainFrame?.y ?? portrait.y + 185 * portrait.size
   return glyphs.map(glyph => {
     const x = glyph.x * width
     const y = glyph.y * height
@@ -52,7 +53,8 @@ export function drawScene(
   const [woman, ocean, brain] = weights
   const time = still ? 0 : now / 1000
   const forces = touches.map(touch => ({ ...touch, strength: touchStrength(touch, now) }))
-  const radius = Math.min(100, width * 0.22)
+  const radius = Math.min(130, width * 0.31)
+  const waveLimit = Math.min(370, width * 0.74)
   context.globalAlpha = 1
   context.fillStyle = BACKGROUND
   context.fillRect(0, 0, width, height)
@@ -101,11 +103,22 @@ export function drawScene(
     for (const force of forces) {
       const dx = x - force.x
       const dy = y - force.y
-      const distance = (dx * dx + dy * dy) / (radius * radius)
-      if (distance >= 1) continue
-      const falloff = (1 - distance) ** 2 * force.strength
-      x += dx * falloff * 0.52
-      y += (dy * 0.30 + radius * 0.14) * falloff
+      const distance = Math.hypot(dx, dy)
+      if (distance < radius) {
+        const falloff = (1 - (distance / radius) ** 2) ** 2 * force.strength
+        x += dx * falloff * 0.9
+        y += (dy * 0.55 + radius * 0.24) * falloff
+      }
+
+      const age = now - (force.released ?? force.started)
+      const ripple = rippleAt(distance, age, waveLimit) * (force.released === undefined ? 1 : 0.75)
+      if (ripple === 0) continue
+      x += dx / Math.max(distance, 1) * ripple * 16
+      y += dy / Math.max(distance, 1) * ripple * 16
+      const tone = Math.max(0, ripple) * 0.65
+      ink += tone
+      red += 154 * tone
+      green += 36 * tone
     }
 
     context.globalAlpha = Math.min(0.95, glyph.ambient + ink * 0.83)

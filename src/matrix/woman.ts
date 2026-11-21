@@ -47,12 +47,12 @@ export function sampleWoman(glyph: Glyph, x: number, y: number, portrait: Portra
   const hairline = 165 - 0.0026 * (v - 97) ** 2
   const hair = (1 - smoothstep(hairline - 17, hairline + 23, u)) * (1 - smoothstep(195, 270, v))
   const cheek = Math.exp(-((u - 192) ** 2 / 340 + (v - 137) ** 2 / 1100))
-  const edge = smoothstep(-10, 12, signedDistance(u, v) + (glyph.tone - 0.5) * 7)
-  const fade = 1 - smoothstep(424, 478, v)
+  const edge = smoothstep(-2, 6, signedDistance(u, v))
+  const fade = 1 - smoothstep(440, 478, v)
   const spine = Math.exp(-(((u - (87 + 19 * Math.cos(v / 63))) / 47) ** 2)) * smoothstep(221, 270, v)
-  const ink = edge * fade * (0.43 + hair * 0.36 + spine * 0.19 - cheek * 0.24 + glyph.tone * 0.16)
-  const red = Math.round(157 + 55 * (1 - hair))
-  const green = Math.round(35 + 40 * (1 - hair))
+  const ink = edge * fade * (0.72 + hair * 0.18 + spine * 0.12 - cheek * 0.13 + glyph.tone * 0.12)
+  const red = Math.round(126 + 51 * (1 - hair))
+  const green = Math.round(25 + 21 * (1 - hair))
   return {
     ink, red, green,
   }
